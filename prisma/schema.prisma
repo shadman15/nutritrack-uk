@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  avatar       String?
+  subscription String   @default("free")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  goals     UserGoals?
+  diary     DiaryEntry[]
+  weights   WeightEntry[]
+  recipes   Recipe[]
+  exercises ExerciseEntry[]
+}
+
+model UserGoals {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  dailyCalories   Int     @default(2000)
+  proteinG        Float   @default(150)
+  carbsG          Float   @default(200)
+  fatG            Float   @default(65)
+  weightGoal      String  @default("maintain")
+  currentWeightKg Float   @default(70)
+  targetWeightKg  Float?
+  heightCm        Float   @default(170)
+  age             Int     @default(30)
+  sex             String  @default("male")
+  activityLevel   String  @default("moderate")
+  weeklyGoalKg    Float   @default(0.5)
+  dietType        String  @default("balanced")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodItem {
+  id              String   @id @default(cuid())
+  barcode         String?  @unique
+  name            String
+  brand           String?
+  category        String?
+  superstore      String?
+  per100gKcal     Float    @default(0)
+  per100gProtein  Float    @default(0)
+  per100gCarbs    Float    @default(0)
+  per100gFat      Float    @default(0)
+  per100gFibre    Float    @default(0)
+  per100gSalt     Float    @default(0)
+  per100gSugar    Float    @default(0)
+  per100gSaturates Float   @default(0)
+  imageUrl        String?
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  diaryEntries DiaryEntry[]
+  recipeItems  RecipeItem[]
+}
+
+model DiaryEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  date       String
+  mealType   String
+  foodItemId String
+  quantityG  Float
+  kcal       Float
+  proteinG   Float
+  carbsG     Float
+  fatG       Float
+  fibreG     Float    @default(0)
+  saltG      Float    @default(0)
+  sugarG     Float    @default(0)
+  saturatesG Float    @default(0)
+  createdAt  DateTime @default(now())
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food FoodItem @relation(fields: [foodItemId], references: [id])
+}
+
+model WeightEntry {
+  id       String   @id @default(cuid())
+  userId   String
+  date     String
+  weightKg Float
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Recipe {
+  id           String       @id @default(cuid())
+  userId       String
+  name         String
+  serves       Int          @default(1)
+  totalKcal    Float        @default(0)
+  totalProtein Float        @default(0)
+  totalCarbs   Float        @default(0)
+  totalFat     Float        @default(0)
+  createdAt    DateTime     @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items RecipeItem[]
+}
+
+model RecipeItem {
+  id         String @id @default(cuid())
+  recipeId   String
+  foodItemId String
+  quantityG  Float
+
+  recipe Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  food   FoodItem @relation(fields: [foodItemId], references: [id])
+}
+
+model ExerciseEntry {
+  id             String   @id @default(cuid())
+  userId         String
+  date           String
+  activity       String
+  durationMins   Int
+  caloriesBurned Float
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
